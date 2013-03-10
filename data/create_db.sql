@@ -4,7 +4,7 @@ CREATE DATABASE cauguste;
 
 CREATE TABLE companies (
 	cik           varchar(10) NOT NULL PRIMARY KEY,	-- SEC central index key
-	name 				  varchar(80),
+	name 				  varchar(130),
 	irs_num       int,						-- IRS number
 	incorp_st     varchar(2),			-- state of incorporation
 	fy_end        smallint,				-- fiscal year end
