@@ -1,0 +1,14 @@
+{
+    "name": "c.auguste",
+    "description": "A simple, RESTful interface to the SEC's EDGAR database",
+    "author": "Tony Thomson <thomson@me.com>",
+    "version": "0.0.1",
+    "scripts": {
+	    "start": "node ./server.js",
+	    // "test": "vows --spec --isolate",
+	    "initDB": "node ./initDB.js"
+	  },
+    "dependencies": {
+        "express": "3.x"
+    }
+}
