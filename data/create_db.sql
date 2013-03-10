@@ -18,14 +18,16 @@ CREATE TABLE companies (
 );
 
 CREATE TABLE filings (
-	acc_num       varchar(20) NOT NULL PRIMARY KEY,	-- SEC accession number
+	acc_num       varchar(20) NOT NULL,	-- SEC accession number
 	descr         varchar(80),		-- description
+  form_type     varchar(20),
 	file_date     date,
 	file_date_ch  date,						-- filing date changed
 	acc_date      timestamp,			-- accepted
 	rep_period    date,						-- period of report
 	issuer        int,						-- issuing company (CIK)
-	reporter      int 						-- reporting company (CIK)
+	reporter      int, 						-- reporting company (CIK)
+  PRIMARY KEY(acc_num, issuer)
 );
 
 CREATE TABLE documents (
