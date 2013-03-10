@@ -1,9 +1,16 @@
-var http = require('http');
+var http = require('http'),
+ express = require('express'),
       pg = require('pg'),
        _ = require("underscore");
 
-http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
-}).listen(3000, '127.0.0.1');
-console.log('Server running at http://127.0.0.1:3000/');
+var app = express();
+
+app.get('/companies', function(req, res) {
+    res.send([{name:'company1'}, {name:'company2'}]);
+});
+app.get('/companies/:cik', function(req, res) {
+    res.send({id:req.params.cik, name: "some CIK", description: "description"});
+});
+
+app.listen(3000);
+console.log('Listening on port 3000...');
