@@ -1,6 +1,6 @@
 var express = require('express'),
-          // _ = require("underscore"),
-  companies = require('./routes/companies');
+  companies = require('./routes/companies'),
+			files = require('./routes/files');
 
 var app = express();
 
@@ -9,11 +9,15 @@ app.configure(function () {
 	app.use(express.bodyParser());
 });
 
-app.get('/companies', companies.findAll);
-app.get('/companies/:cik', companies.findByCIK);
-app.post('/companies', companies.addWine);
-app.put('/companies/:id', companies.updateWine);
-app.delete('/companies/:id', companies.deleteWine);
+// Static web pages
+app.get('/', files.serveIndex);
+
+// REST operations for companies
+app.get('/v0/companies', companies.findAll);
+app.get('/v0/companies/:cik', companies.findByCIK);
+app.post('/v0/companies', companies.addCompany);
+app.put('/v0/companies/:id', companies.updateCompany);
+app.delete('/v0/companies/:id', companies.deleteCompany);
 
 app.listen(3000);
 console.log('Listening on port 3000...');
