@@ -73,7 +73,7 @@ exports.updateCompany = function(req, res) {
 		console.log("Connected to DB...");
 		var query = client.query('UPDATE companies SET incorp_st = $1, fy_end = $2 WHERE CIK=$3', [companyInfo.incorp_st, companyInfo.fy_end, req.params.cik]);
 		query.on('error', function(err) {
-			console.log("Error: "+err);
+			console.log("Error: " + err);
 		});
 		query.on('end', function() {
 			console.log("UPDATE successful");
@@ -84,5 +84,18 @@ exports.updateCompany = function(req, res) {
 };
 
 exports.deleteCompany = function(req, res) {
-    // res.send({id:req.params.cik, name: "some CIK", description: "description"});
+	// Deletes company specified by CIK
+	pg.connect(conString, function(err, client) {
+		if (err) throw err;
+		console.log("Connected to DB...");
+		var query = client.query('DELETE FROM companies WHERE CIK = $1',[req.params.cik]);
+		query.on('error', function(err) {
+			console.log("Error: " + err);
+		});
+		query.on('end', function() {
+			console.log("DELETE successful");
+			res.send(200, {message:"Company at cik " + req.params.cik + " deleted."});
+			console.log('Connection to DB closed.');
+    });
+	});
 };

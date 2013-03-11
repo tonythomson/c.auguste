@@ -73,6 +73,24 @@ describe("C.Auguste API: Companies", function() {
         });
   });
 
+  it("Should accept DELETEs to /companies", function(done) {
+    request.del("http://127.0.0.1:3000/v0/companies/5555",
+      function(error, response, body) {
+        expect(response.statusCode).toEqual(200);
+        var result = JSON.parse(body);
+        expect(result.message).toEqual('Company at cik 5555 deleted.');
+        done();
+
+        request("http://127.0.0.1:3000/v0/companies/5555",
+          function(error, response, body) {
+            expect(response.statusCode).toEqual(404);
+            var result = JSON.parse(body);
+            expect(result.message).toEqual('No company found for CIK 5555');
+            done();
+          });
+        });
+  });
+
   xit("Should 404 when asked for a nonexistent file", function(done) {
     request("http://127.0.0.1:8080/arglebargle",
       function(error, response, body) {
