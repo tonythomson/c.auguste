@@ -1,7 +1,9 @@
-var  fs = require ("fs"),
+var  fs = require('fs'),
     csv = require('csv'),
      pg = require('pg'),
-      _ = require("underscore");
+request = require('request');
+cheerio = require('cheerio');
+      _ = require('underscore');
 
 var parseAccNum = function(path) {
 	var regexp = /edgar\/data\/\d*\/(\S*)\.txt/g;
@@ -12,7 +14,7 @@ var parseAccNum = function(path) {
 var parseMasterIdxRow = function(row) {
 	// Takes a row from the IDX file and Returns a 'filing' object
 	var filing = {};
-	filing.cik = row[0];
+	filing.issuer = row[0];
 	filing.company_name = row[1];
 	filing.form_type = row[2];
 	filing.file_date = row[3];
@@ -32,14 +34,99 @@ var removeDupesFromArray = function (recordsArray) {
 };
 
 var logFileResults = function(filename, linesSkipped, firstCount, lastCount){
-		// Logs some simple stats to console
-		console.log("Scanned file "+filename+":");
-		console.log("-"+linesSkipped+" non-delimited lines skipped");
-		console.log(lastCount + " rows scanned ("+(firstCount-lastCount) + " duplicates found/removed).");
+	// Logs some simple stats to console
+	console.log("Scanned file " + filename + ":");
+	console.log("-> "+linesSkipped+" non-delimited lines skipped");
+	console.log(lastCount + " rows scanned (" + (firstCount-lastCount) + " duplicates found/removed).");
+};
+
+var insertFilingIfUnknown = function(client, filing) {
+	var query = client.query('SELECT 1 FROM filings WHERE acc_num=$1 AND issuer=$2', [filing.acc_num, filing.issuer]);
+	query.on('error', function(err) {
+		console.log("Look out!" + err);
+	});
+	query.on('end', function(result) {
+		// If filing is not already in DB
+		if (result.rowCount === 0) {
+			client.query('INSERT INTO filings (acc_num, form_type, file_date, issuer) VALUES ($1, $2, $3, $4)', [filing.acc_num, filing.form_type, filing.file_date, filing.issuer], function(err, result) {
+				// if (err) console.log("Error at " + filing.cik + " / " + filing.acc_num + ": " + err);
+			});
+		} else {
+			console.log("Filing " + filing.acc_num + " already in DB.");
+		}
+	});
+};
+
+var insertCompany = function(client, company) {
+	var query = client.query('SELECT 1 FROM companies where cik=$1', ['1004981']);
+	client.query('INSERT INTO companies (cik, name, incorp_st, fy_end, bus_addr1, bus_addr2, bus_addr3, bus_phone, mail_addr1, mail_addr2, mail_addr3, sic) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+		[company.cik, company.name, company.incorp_st, company.fy_end, company.bus_addr1, company.bus_addr2, company.bus_addr3, company.bus_phone, company.mail_addr1, company.mail_addr2, company.mail_addr3, company.sic],
+		function(err, result) {});
+};
+
+var fetchCompanyIfUnknown = function(client, company) {
+	var query = client.query('SELECT 1 FROM companies WHERE cik=$1', [company.cik]);
+	query.on('end', function(result) {
+		// If company is not already in DB
+		if (result.rowCount === 0) {
+			console.log("Fetching company details for company " + company.cik);
+			request("http://www.sec.gov/cgi-bin/own-disp?CIK=" + company.cik + "&action=getissuer",
+			// request("http://www.sec.gov/cgi-bin/own-disp?CIK=1004981&action=getissuer",
+				function(err, response, body) {
+					if (err) throw err;
+					$ = cheerio.load(body);
+					var busAddress = $('b.blue:contains("Business Address")').parent().html();
+					if(busAddress !== null) {
+						busAddress = busAddress.split("<br>\n");
+
+						company.bus_addr1 = busAddress[1];
+						company.bus_addr2 = busAddress[2];
+						if(busAddress.length > 5) {
+							company.bus_addr3 = busAddress[3];
+							company.bus_phone = busAddress[4];
+						} else {
+							company.bus_phone = busAddress[3];
+						}
+					}
+					var mailAddress = $('b.blue:contains("Mailing Address")').parent().html();
+					if(mailAddress !== null) {
+						mailAddress = mailAddress.split("<br>\n");
+						company.mail_addr1 = mailAddress[1];
+						company.mail_addr2 = mailAddress[2];
+						company.mail_addr3 = mailAddress[3];
+					}
+
+					var details = $('a[href*="State"]').parent().text().split('|');
+					var regexp = /(\d{3,}).*location:\s(\w{2,})/m;
+					var regexp2 = /Inc.:\s(\w*)\s/g;
+					var regexp3 = /End:\s(\d*)/g;
+					details[0] = details[0].replace(/\n/g,"");
+
+					var match = regexp.exec(details[0]);
+					if(match !== null) { company.sic = match[1]; }
+					else { company.sic = null; }
+					// Could also capture state location from match[2]
+
+					match = regexp2.exec(details[1]);
+					if(match !== null) { company.incorp_st = match[1]; }
+					else { company.incorp_st = null; }
+
+					match = regexp3.exec(details[2]);
+					if(match !== null) { company.fy_end = match[1]; }
+					else { company.fy_end = null; }
+
+					// console.log(company);
+					insertCompany(client, company);
+			});
+		} else {
+			console.log("Company "+company.cik+" already in DB.");
+		}
+	});
 };
 
 var conString = "pg://tony:@127.0.0.1/cauguste";
 var filename = "master.20130307.idx";
+// var filename = "test.idx";
 var filingsArray = [];
 var companiesArray = [];
 var client = new pg.Client(conString);
@@ -48,7 +135,7 @@ var linesSkipped = 0;
 client.connect(function(err) {
 	if (err) throw err;
 	csv()
-	.from.stream(fs.createReadStream(__dirname+'/data/'+filename), {delimiter:'|'})
+	.from.stream(fs.createReadStream(__dirname + '/data/' + filename), {delimiter:'|'})
 	.transform(function(data){
 		// Ignore rows in the file that are not delimited data
 		if((data.length < 5)||(data[0] === "CIK")) { linesSkipped++; return null; }
@@ -66,16 +153,14 @@ client.connect(function(err) {
 
 		// Try and insert all unique filings from this file into the filings table (log & ignore INSERT errors);
 		_.each(filingsArray, function(filing, line) {
-			client.query('INSERT INTO filings (acc_num, form_type, file_date, issuer) VALUES ($1, $2, $3, $4)', [filing.acc_num, filing.form_type, filing.file_date, filing.cik], function(err, result) {
-				if (err) console.log("Error at "+ filing.cik + " / " + filing.acc_num + ": " + err);
-			});
-			companiesArray.push({cik: filing.cik, name: filing.company_name});
+			insertFilingIfUnknown(client, filing);
+			companiesArray.push({cik: filing.issuer, name: filing.company_name});
 		});
 
-		// Try and insert all unique companies from this file into the companies table (ignore INSERT errors);
+		// Try and insert all unique companies from this file into the companies table
 		companiesArray = removeDupesFromArray(companiesArray);
 		_.each(companiesArray, function(company){
-			client.query('INSERT INTO companies (cik, name) VALUES ($1, $2)', [company.cik, company.name], function(err, result) {});
+			fetchCompanyIfUnknown(client, company);
 		});
 	})
 	.on('error', function(error){
