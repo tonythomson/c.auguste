@@ -11,6 +11,7 @@ CREATE TABLE companies (
 	bus_addr1     varchar(30),
 	bus_addr2     varchar(30),
 	bus_addr3     varchar(30),
+	bus_phone     varchar(30),
 	mail_addr1    varchar(30),
 	mail_addr2    varchar(30),
 	mail_addr3    varchar(30),
