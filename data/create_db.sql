@@ -8,35 +8,40 @@ CREATE TABLE companies (
 	irs_num       int,						-- IRS number
 	incorp_st     varchar(2),			-- state of incorporation
 	fy_end        smallint,				-- fiscal year end
-	bus_addr1     varchar(30),
-	bus_addr2     varchar(30),
-	bus_addr3     varchar(30),
-	bus_phone     varchar(30),
-	mail_addr1    varchar(30),
-	mail_addr2    varchar(30),
-	mail_addr3    varchar(30),
+	bus_addr1     varchar(80),
+	bus_addr2     varchar(80),
+	bus_addr3     varchar(80),
+	bus_addr4     varchar(80),
+	bus_phone     varchar(20),
+	mail_addr1    varchar(80),
+	mail_addr2    varchar(80),
+	mail_addr3    varchar(80),
 	sic           int 						-- standard industrial classification
 );
 
 CREATE TABLE filings (
 	acc_num       varchar(20) NOT NULL,	-- SEC accession number
-	descr         varchar(80),		-- description
+	descr         varchar(200),		-- description
   form_type     varchar(20),
 	file_date     date,
 	file_date_ch  date,						-- filing date changed
 	acc_date      timestamp,			-- accepted
 	rep_period    date,						-- period of report
+	eff_date      date,						-- effectiveness date
+	documents     smallint,
+	group_members varchar(300),
+	items         text,
 	issuer        int,						-- issuing company (CIK)
 	reporter      int, 						-- reporting company (CIK)
   PRIMARY KEY(acc_num, issuer)
 );
 
 CREATE TABLE documents (
-	id            bigint NOT NULL PRIMARY KEY,	-- unique id (no EDGAR equiv)
+	id            SERIAL NOT NULL PRIMARY KEY,	-- unique id (no EDGAR equiv)
 	seq           smallint,				-- ?
 	descr         varchar(80),
 	file_name     varchar(80),
-	type          smallint,				-- ?
+	type          varchar(20),				-- ?
 	size          int,						-- file size
 	acc_num       varchar(20)			-- SEC accession number
 );
