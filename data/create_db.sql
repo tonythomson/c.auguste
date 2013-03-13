@@ -1,9 +1,7 @@
-CREATE DATABASE cauguste;
-
 \c cauguste;
 
 CREATE TABLE companies (
-	cik           varchar(10) NOT NULL PRIMARY KEY,	-- SEC central index key
+	cik           varchar(10) NOT NULL,	-- SEC central index key
 	name 				  varchar(130),
 	irs_num       int,						-- IRS number
 	incorp_st     varchar(2),			-- state of incorporation
@@ -16,7 +14,8 @@ CREATE TABLE companies (
 	mail_addr1    varchar(80),
 	mail_addr2    varchar(80),
 	mail_addr3    varchar(80),
-	sic           int 						-- standard industrial classification
+	sic           int,						-- standard industrial classification
+	PRIMARY KEY(cik)
 );
 
 CREATE TABLE filings (
@@ -33,17 +32,18 @@ CREATE TABLE filings (
 	items         text,
 	issuer        int,						-- issuing company (CIK)
 	reporter      int, 						-- reporting company (CIK)
-  PRIMARY KEY(acc_num, issuer)
+  PRIMARY KEY(acc_num)
 );
 
 CREATE TABLE documents (
-	id            SERIAL NOT NULL PRIMARY KEY,	-- unique id (no EDGAR equiv)
+	id            SERIAL NOT NULL,	-- unique id (no EDGAR equiv)
 	seq           smallint,				-- ?
 	descr         varchar(80),
 	file_name     varchar(80),
-	type          varchar(20),				-- ?
+	type          varchar(20),		-- ?
 	size          int,						-- file size
-	acc_num       varchar(20)			-- SEC accession number
+	acc_num       varchar(20),		-- SEC accession number
+	PRIMARY KEY(id)
 );
 
 INSERT INTO companies (cik, name, irs_num, incorp_st, fy_end, bus_addr1, bus_addr2, bus_addr3, mail_addr1, mail_addr2, mail_addr3, sic) 
