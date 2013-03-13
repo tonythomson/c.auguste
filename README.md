@@ -1,43 +1,41 @@
-#Implementing the REST API
+#C.Auguste API Documentation
 
-C.Auguste's REST API consists of the following methods:
-(note that this is a work-in-progress)
+##Overview
 
-<table>
-  <tr>
-    <td>Method</td>
-    <td>URL</td>
-    <td>Action</td>
-  </tr>
+***(Please note that C.Auguste is a WIP; consider it alpha-quality)***
 
-  <tr>
-    <td>GET</td>
-    <td>/companies</td>
-    <td>Retrieve all companies</td>
-  </tr>
+The C.Auguste API provides a RESTful interface to the company and filing information stored in the [SEC's EDGAR database](http://www.sec.gov/edgar/searchedgar/companysearch.html).
 
-  <tr>
-    <td>GET</td>
-    <td>/companies/1000275</td>
-    <td>Retrieve the company with the specified CIK</td>
-  </tr>
+Data is updated daily, by downloading the previous day's index of all filings, and then parsing it and scraping the EDGAR website to obtain all data associated with each filing and company.
 
-  <tr>
-    <td>POST</td>
-    <td>/companies</td>
-    <td>Add a new company</td>
-  </tr>
+C.Auguste uses HTTP verbs for all CRUD operations on the database, and strives for RESTful best practices. Feedback is welcome.
 
-  <tr>
-    <td>PUT</td>
-    <td>/companies/1000275</td>
-    <td>Update the company with the specified CIK</td>
-  </tr>
 
-  <tr>
-    <td>DELETE</td>
-    <td>/companies/1000275</td>
-    <td>Delete the company with the specified CIK</td>
-  </tr>
+###Base URL:
 
-</table>
+`http://api.cauguste.com/`
+
+###Resource URL Patterns:
+
+####Company Data (implemented):
+
+Method | URL | Action
+------------ | ------------- | ------------
+`GET` | `/v0/companies`  | Retrieve all companies
+`GET` | `/v0/companies/1000275` | Retrieve the company with the specified CIK
+`POST` | `/v0/companies` | Add a new company
+`PUT` | `/v0/companies/{CIK}` | Update the company with the specified CIK
+`DELETE` | `/v0/companies/{CIK}` | Delete the company with the specified CIK
+
+####Filing Data (not yet implemented):
+
+Method | URL | Action
+------------ | ------------- | ------------
+`GET` | `/v0/filings`  | Retrieve all companies
+`GET` | `/v0/filings/1000275` | Retrieve the company with the specified CIK
+`POST` | `/v0/filings` | Add a new company
+`PUT` | `/v0/filings/{SEC Accession #}` | Update the company with the specified CIK
+`DELETE` | `/v0/filings/{SEC Accession #}` | Delete the company with the specified CIK
+
+##Technical Information
+C.Auguste was built using Node, Express and PostgreSQL.
