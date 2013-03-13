@@ -5,6 +5,22 @@ request = require('request');
 cheerio = require('cheerio');
       _ = require('underscore');
 
+var processArgs = function() {
+	var inputFile = process.argv[2];
+	if (inputFile === undefined) {
+		console.log("scrapeIdx: You must specify an input file; try 'node scrapeIdx <yourFile.idx>'.");
+		process.exit(1);
+	} else {
+		fs.exists(inputFile, function (exists) {
+			if(!exists) {
+				console.log("scrapeIdx: Cannot find file '" + inputFile + "'.");
+				process.exit(1);
+			}
+		});
+		return inputFile;
+	}
+};
+
 var parseAccNum = function(path) {
 	var regexp = /edgar\/data\/\d*\/(\S*)\.txt/g;
 	var match = regexp.exec(path);
@@ -173,17 +189,17 @@ var fetchCompanyIfUnknown = function(client, company) {
 };
 
 var conString = "pg://tony:@127.0.0.1/cauguste";
-// var filename = "master.20130307.idx";
-var filename = "test.idx";
 var filingsArray = [];
 var companiesArray = [];
 var client = new pg.Client(conString);
 var linesSkipped = 0;
 
+var filename = processArgs();
+
 client.connect(function(err) {
 	if (err) throw err;
 	csv()
-	.from.stream(fs.createReadStream(__dirname + '/data/' + filename), {delimiter:'|'})
+	.from.stream(fs.createReadStream(__dirname + '/' + filename), {delimiter:'|'})
 	.transform(function(data){
 		// Ignore rows in the file that are not delimited data
 		if((data.length < 5)||(data[0] === "CIK")) { linesSkipped++; return null; }
