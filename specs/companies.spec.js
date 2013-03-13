@@ -1,4 +1,5 @@
 var request = require("request");
+// Tests are based on the dataset loaded from the text.idx file
 
 describe("C.Auguste API: Companies", function() {
 
@@ -7,8 +8,9 @@ describe("C.Auguste API: Companies", function() {
       function(error, response, body) {
         expect(response.statusCode).toEqual(200);
         var companies = JSON.parse(body);
-        expect(companies.length).toEqual(3188);
-        expect(companies[0].cik).toEqual('1000275');
+        expect(companies.data.length).toEqual(305);
+        expect(companies.data.length).toEqual(companies.count);
+        expect(companies.data[0].cik).toEqual('0001004980');
         done();
       });
   });
@@ -17,9 +19,9 @@ describe("C.Auguste API: Companies", function() {
     request("http://127.0.0.1:3000/v0/companies/1000275",
       function(error, response, body) {
         expect(response.statusCode).toEqual(200);
-        var companies = JSON.parse(body);
-        expect(companies.length).toEqual(1);
-        expect(companies[0].name).toEqual('ROYAL BANK OF CANADA');
+        var company = JSON.parse(body);
+        expect(company.cik).toEqual('1000275');
+        expect(company.name).toEqual('ROYAL BANK OF CANADA');
         done();
       });
   });
@@ -45,9 +47,9 @@ describe("C.Auguste API: Companies", function() {
       request("http://127.0.0.1:3000/v0/companies/5555",
         function(error, response, body) {
           expect(response.statusCode).toEqual(200);
-          var companies = JSON.parse(body);
-          expect(companies.length).toEqual(1);
-          expect(companies[0].name).toEqual('BLACK SUN CORP.');
+          var company = JSON.parse(body);
+          expect(company.cik).toEqual('5555');
+          expect(company.name).toEqual('BLACK SUN CORP.');
           done();
         });
       });
@@ -64,10 +66,9 @@ describe("C.Auguste API: Companies", function() {
         request("http://127.0.0.1:3000/v0/companies/5555",
           function(error, response, body) {
             expect(response.statusCode).toEqual(200);
-            var companies = JSON.parse(body);
-            expect(companies.length).toEqual(1);
-            expect(companies[0].fy_end).toEqual(1231);
-            expect(companies[0].incorp_st).toEqual('CA');
+            var company = JSON.parse(body);
+            expect(company.fy_end).toEqual(1231);
+            expect(company.incorp_st).toEqual('CA');
             done();
           });
         });
@@ -89,14 +90,6 @@ describe("C.Auguste API: Companies", function() {
             done();
           });
         });
-  });
-
-  xit("Should 404 when asked for a nonexistent file", function(done) {
-    request("http://127.0.0.1:8080/arglebargle",
-      function(error, response, body) {
-        expect(response.statusCode).toEqual(404);
-        done();
-      });
   });
 
 });

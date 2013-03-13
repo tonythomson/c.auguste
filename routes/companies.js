@@ -5,6 +5,11 @@ var conString = "pg://tony:@127.0.0.1/cauguste";
 
 exports.findAll = function(req, res) {
 	// Return all companies
+	var returnObj = {
+		object: "list",
+		url: req.path,
+		count: 0
+	};
 	var companyArray = [];
 	pg.connect(conString, function(err, client) {
 		if (err) throw err;
@@ -14,8 +19,10 @@ exports.findAll = function(req, res) {
 			companyArray.push(row);
 		});
 		query.on('end', function() {
+			returnObj['data'] = companyArray;
+			returnObj['count'] = companyArray.length;
 			console.log("Returning "+companyArray.length+" rows.");
-			res.send(companyArray);
+			res.send(returnObj);
 			console.log('Connection to DB closed.');
     });
 	});
@@ -23,19 +30,19 @@ exports.findAll = function(req, res) {
 
 exports.findByCIK = function(req, res) {
 	// Return data for company specified by CIK
-	var companyArray = [];
+	var company = {};
 	pg.connect(conString, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var query = client.query('SELECT * FROM companies WHERE CIK=$1', [req.params.cik]);
 		query.on('row', function(row) {
-			companyArray.push(row);
+			company = row;
 		});
 		query.on('end', function() {
-			if(companyArray.length === 0) {
+			if(company.cik === undefined) {
 				res.send(404, {message:"No company found for CIK "+req.params.cik});
 			} else {
-				res.send(companyArray);
+				res.send(company);
 				console.log('Connection to DB closed.');
 			}
     });
