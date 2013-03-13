@@ -41,15 +41,54 @@ var logFileResults = function(filename, linesSkipped, firstCount, lastCount){
 };
 
 var insertFilingIfUnknown = function(client, filing) {
-	var query = client.query('SELECT 1 FROM filings WHERE acc_num=$1 AND issuer=$2', [filing.acc_num, filing.issuer]);
+	// var query = client.query('SELECT 1 FROM filings WHERE acc_num=$1 AND issuer=$2', [filing.acc_num, filing.issuer]);
+	var query = client.query('SELECT 1 FROM filings WHERE acc_num=$1', [filing.acc_num]);
 	query.on('error', function(err) {
-		console.log("Look out!" + err);
+		console.log("Error verifying filing exists: " + err);
 	});
 	query.on('end', function(result) {
 		// If filing is not already in DB
 		if (result.rowCount === 0) {
-			client.query('INSERT INTO filings (acc_num, form_type, file_date, issuer) VALUES ($1, $2, $3, $4)', [filing.acc_num, filing.form_type, filing.file_date, filing.issuer], function(err, result) {
-				// if (err) console.log("Error at " + filing.cik + " / " + filing.acc_num + ": " + err);
+
+			console.log("FILING: Fetching details for acc_num " + filing.acc_num);
+			request("http://www.sec.gov/Archives/edgar/data/" + filing.issuer + "/" + filing.acc_num + "-index.htm",
+				function(err, response, body) {
+					if (err) throw err;
+					$ = cheerio.load(body);
+					var descr = $('#formName').text();
+					var regex_trim = /\S.*\S/;
+					var match = regex_trim.exec(descr);
+					if(match !== null) { filing.descr = match[0]; }
+
+					var formHeaders = $('.infoHead').map(function () { return $(this).text(); });
+					var formInfo = $('.info').map(function () { return $(this).text(); });
+					var form = _.object(formHeaders, formInfo);
+					if(form['Filing Date']) { filing.file_date = form['Filing Date']; }
+					if(form['Filing Date Changed']) { filing.file_date_ch = form['Filing Date Changed']; }
+					if(form['Accepted']) { filing.acc_date = form['Accepted']; }
+					if(form['Documents']) { filing.documents = form['Documents']; }
+					if(form['Group Members']) { filing.group_members = form['Group Members']; }
+					if(form['Items']) { filing.items = form['Items']; }
+
+					var numDocs = parseInt(filing.documents, 10);
+					for (var i = 2; i <= (numDocs + 2); i++) {
+						var doc = {};
+						doc.acc_num = filing.acc_num;
+						docArray = $('.tableFile tr:nth-child('+i+') td').map(function () { return $(this).text(); });
+						if(docArray[0] > 0) { doc.seq = docArray[0]; }
+						else { doc.seq = 0; }
+						doc.descr = docArray[1];
+						doc.file_name= docArray[2];
+						doc.ftype = docArray[3];
+						if(docArray[4] > 0) { doc.fsize = docArray[4]; }
+						client.query('INSERT INTO documents (seq, descr, file_name, type, size, acc_num) VALUES ($1, $2, $3, $4, $5, $6)', [doc.seq, doc.descr, doc.file_name, doc.ftype, doc.fsize, doc.acc_num], function(err, result) {
+							if (err) console.log("Error INSERTing document " + doc.acc_num + " in " + doc.seq + ": " + err);
+						});
+					}
+
+					client.query('INSERT INTO filings (acc_num, descr, form_type, file_date, file_date_ch, acc_date, rep_period, eff_date, documents, group_members, items, issuer, reporter) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)', [filing.acc_num, filing.descr, filing.form_type, filing.file_date, filing.file_date_ch, filing.acc_date, filing.rep_period, filing.eff_date, filing.documents, filing.group_members, filing.items, filing.issuer, filing.reporter], function(err, result) {
+						if (err) console.log("Error INSERTing filing" + filing.cik + " / " + filing.acc_num + ": " + err);
+					});
 			});
 		} else {
 			console.log("Filing " + filing.acc_num + " already in DB.");
@@ -58,10 +97,13 @@ var insertFilingIfUnknown = function(client, filing) {
 };
 
 var insertCompany = function(client, company) {
-	var query = client.query('SELECT 1 FROM companies where cik=$1', ['1004981']);
+	var query = client.query('SELECT 1 FROM companies where cik=$1', [company.cik]);
 	client.query('INSERT INTO companies (cik, name, incorp_st, fy_end, bus_addr1, bus_addr2, bus_addr3, bus_phone, mail_addr1, mail_addr2, mail_addr3, sic) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
 		[company.cik, company.name, company.incorp_st, company.fy_end, company.bus_addr1, company.bus_addr2, company.bus_addr3, company.bus_phone, company.mail_addr1, company.mail_addr2, company.mail_addr3, company.sic],
-		function(err, result) {});
+		function(err, result) {
+			console.log("Error INSERTing company " + company.cik + ": " + err);
+			console.log(company);
+		});
 };
 
 var fetchCompanyIfUnknown = function(client, company) {
@@ -69,11 +111,12 @@ var fetchCompanyIfUnknown = function(client, company) {
 	query.on('end', function(result) {
 		// If company is not already in DB
 		if (result.rowCount === 0) {
-			console.log("Fetching company details for company " + company.cik);
+			console.log("COMPANY: Fetching details for CIK " + company.cik);
 			request("http://www.sec.gov/cgi-bin/own-disp?CIK=" + company.cik + "&action=getissuer",
-			// request("http://www.sec.gov/cgi-bin/own-disp?CIK=1004981&action=getissuer",
 				function(err, response, body) {
-					if (err) throw err;
+					if (err) {
+						console.log("REQUEST ERROR: " + err);
+					}
 					$ = cheerio.load(body);
 					var busAddress = $('b.blue:contains("Business Address")').parent().html();
 					if(busAddress !== null) {
@@ -81,11 +124,16 @@ var fetchCompanyIfUnknown = function(client, company) {
 
 						company.bus_addr1 = busAddress[1];
 						company.bus_addr2 = busAddress[2];
-						if(busAddress.length > 5) {
-							company.bus_addr3 = busAddress[3];
-							company.bus_phone = busAddress[4];
-						} else {
-							company.bus_phone = busAddress[3];
+						// if there's a next and it contains only #
+						regexpNotPhone = /[a-zA-Z]+/;
+						for (var i = 3; i < busAddress.length; i++) {
+							if(busAddress[i] !== undefined) {
+								if (regexpNotPhone.exec(busAddress)) {
+									company['bus_addr'+i] = busAddress[i];
+								} else {
+									company.bus_phone = busAddress[i];
+								}
+							}
 						}
 					}
 					var mailAddress = $('b.blue:contains("Mailing Address")').parent().html();
@@ -125,8 +173,8 @@ var fetchCompanyIfUnknown = function(client, company) {
 };
 
 var conString = "pg://tony:@127.0.0.1/cauguste";
-var filename = "master.20130307.idx";
-// var filename = "test.idx";
+// var filename = "master.20130307.idx";
+var filename = "test.idx";
 var filingsArray = [];
 var companiesArray = [];
 var client = new pg.Client(conString);
@@ -164,7 +212,7 @@ client.connect(function(err) {
 		});
 	})
 	.on('error', function(error){
-		console.log(error.message);
+		console.log("Error parsing text file: " + error);
 	});
 
 });
