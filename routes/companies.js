@@ -10,18 +10,17 @@ exports.findAll = function(req, res) {
 		url: req.path,
 		count: 0
 	};
-	var companyArray = [];
 	pg.connect(conString, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var query = client.query('SELECT * FROM companies');
-		query.on('row', function(row) {
-			companyArray.push(row);
+		query.on('row', function(row, result) {
+			result.addRow(row);
 		});
-		query.on('end', function() {
-			returnObj['data'] = companyArray;
-			returnObj['count'] = companyArray.length;
-			console.log("Returning "+companyArray.length+" rows.");
+		query.on('end', function(result) {
+			returnObj['data'] = result.rows;
+			returnObj['count'] = result.rows.length;
+			console.log("Returning "+result.rows.length+" rows.");
 			res.send(returnObj);
 			console.log('Connection to DB closed.');
     });
