@@ -3,19 +3,20 @@
   "description": "A simple, RESTful interface to the SEC's EDGAR database",
   "author": "Tony Thomson <thomson@me.com>",
   "version": "0.0.1",
-  "scripts": {
-      "start": "node ./server.js",
-      // "test": "vows --spec --isolate",
-      "initDB": "node ./initDB.js"
-    },
-  "dependencies": {
-      "express": "3.x",
-      "pg": "0.14.x",
-      "request": "2.14.x",
-      // for testing only:
-      "jasmine-node": "1.3.x",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/tonythomson/c.auguste.git"
   },
-  "engines": {
-    "node": ">= 0.8.0"
+  "engines": [
+    "node >= 0.6.5"
+  ],
+  "dependencies": {
+    "express": "3.x",
+    "pg": "0.7.x",
+    "request": "2.14.x",
+    "jasmine-node": "1.3.x"
+  },
+  "scripts": {
+    "start": "node ./server.js"
   }
 }
