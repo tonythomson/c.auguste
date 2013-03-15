@@ -87,6 +87,9 @@ var insertFilingIfUnknown = function(client, filing) {
 					if(form['Items']) { filing.items = form['Items']; }
 
 					var numDocs = parseInt(filing.documents, 10);
+					// var docRowCount = $('.tableFile tr').length;
+					// TO-DO: Handle case of multiple tables of docs;
+					// See http://www.sec.gov/Archives/edgar/data/1013867/0001554795-13-000125-index.htm
 					for (var i = 2; i <= (numDocs + 2); i++) {
 						var doc = {};
 						doc.acc_num = filing.acc_num;
