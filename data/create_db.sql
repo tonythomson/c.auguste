@@ -27,7 +27,7 @@ CREATE TABLE filings (
 	acc_date      timestamp,			-- accepted
 	rep_period    date,						-- period of report
 	eff_date      date,						-- effectiveness date
-	documents     smallint,
+	num_docs      smallint,
 	group_members varchar(300),
 	items         text,
 	issuer        int,						-- issuing company (CIK)
@@ -38,10 +38,10 @@ CREATE TABLE filings (
 CREATE TABLE documents (
 	id            SERIAL NOT NULL,	-- unique id (no EDGAR equiv)
 	seq           smallint,				-- ?
-	descr         varchar(80),
+	f_descr         varchar(80),
 	file_name     varchar(80),
-	type          varchar(20),		-- ?
-	size          int,						-- file size
+	f_type          varchar(20),		-- ?
+	f_size          int,						-- file size
 	acc_num       varchar(20),		-- SEC accession number
 	PRIMARY KEY(id)
 );
