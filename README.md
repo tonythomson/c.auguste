@@ -15,15 +15,17 @@ C.Auguste uses HTTP verbs for all CRUD operations on the database, and strives f
 
     http://api.cauguste.com/
 
-###Company Data Resource URLs (implemented):
+###Company Data Resource URLs:
 
 Method | URL | Action
 ------------ | ------------- | ------------
 `GET` | `/v0/companies`  | Retrieve all companies
 `GET` | `/v0/companies/1000275` | Retrieve the company with the specified CIK
-`POST` | `/v0/companies` | Add a new company
-`PUT` | `/v0/companies/{CIK}` | Update the company with the specified CIK
-`DELETE` | `/v0/companies/{CIK}` | Delete the company with the specified CIK
+*`POST`* | *`/v0/companies`* | *Add a new company*
+*`PUT`* | *`/v0/companies/{CIK}`* | *Update the company with the specified CIK*
+*`DELETE`* | *`/v0/companies/{CIK}`* | *Delete the company with the specified CIK*
+
+*Note that `POST`, `PUT` and `DELETE` operations are __ADMIN-ONLY__, and are not publicly exposed.*
 
 ####List all companies:
     GET http://api.cauguste.com/v0/companies
@@ -58,15 +60,12 @@ Example Response:
 }
 ```
 
-####Filing Data (not yet implemented):
+####Filing Data Resource URLs:
 
 Method | URL | Action
 ------------ | ------------- | ------------
-`GET` | `/v0/filings`  | Retrieve all companies
-`GET` | `/v0/filings/1000275` | Retrieve the company with the specified CIK
-`POST` | `/v0/filings` | Add a new company
-`PUT` | `/v0/filings/{SEC Accession #}` | Update the company with the specified CIK
-`DELETE` | `/v0/filings/{SEC Accession #}` | Delete the company with the specified CIK
+`GET` | `/v0/filings`  | Retrieve all filings
+`GET` | `/v0/filings/0000904454-13-000393` | Retrieve the filing with the specified accession number
 
 ####List all filings:
     GET http://api.cauguste.com/v0/filings
@@ -81,18 +80,36 @@ Example Response:
   "data": [
     {
       "acc_num": "0001155555-55-555555",
-      "descr": "Form 5 - Annual statement of changes in beneficial ownership of securities",
+      "descr": "Form N-30D - Annual and semi-annual reports mailed to shareholders",
+      "form_type": "N-30D",
       "form_type": "5",
       "file_date": "2013-03-07",
       "file_date_ch": "2013-03-07",
       "acc_date": "2013-03-07 09:17:37",
       "rep_period": "",
       "eff_date": "",
-      "documents": "",
+      "num_docs": 1,
+      "documents": [
+        {
+          {
+            "seq": 0,
+            "descr": "Complete submission text file",
+            "f_name": "0000743415-13-000004.txt",
+            "f_type": " ",
+            "f_size": 3481
+          },
+          {
+            "seq": 1,
+            "f_descr": "MUTUAL OF AMERICA SEPARATE ACCOUNT 3; N-30D",
+            "f_type": "N-30D",
+            "f_size": 2147
+          }
+        }
+      ],
       "group_members": "",
       "items": "",
-      "issuer": "",
-      "reporter": "",
+      "issuer": "1055555",
+      "reporter": "1066666",
     },
     {...},
     {...}
