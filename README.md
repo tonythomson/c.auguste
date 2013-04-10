@@ -15,6 +15,7 @@ C.Auguste uses HTTP verbs for all CRUD operations on the database, and strives f
 
     http://cauguste.herokuapp.com/
 
+__Note that data on the public-facing server listed above is limited to a subset of one day's data__
 
 ###Company Data Resource URLs:
 
@@ -176,3 +177,4 @@ Every day, the SEC summarizes the previous day's filings in a series of index fi
 C.Auguste's script works with the master index files, available in `/edgar/dailyindex/`. The script ignores the first few lines of metadata in the file and parses the individual lines, each of which represents a filing from the day to which the index refers. The scraper notes the SEC accession number, and then requests the webpage for that filing from the SEC EDGAR website. Info for any documents associated with the filing are stored in C.Auguste's `filings` table.
 
 The script then parses all available metadata for the filing from the web page, and writes the data to the `filings` table in C.Auguste's database. The script also checks the company (referred to by a Central Index Key, or CIK), and, if the company is not in C.Auguste's `companies` table, requests the relevant company page from the SEC EDGAR website, and parses the relevant company metadata for insertion into the `companies` table.
+.
