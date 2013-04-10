@@ -1,8 +1,5 @@
 var pg = require('pg');
 
-
-var conString = "pg://tony:@127.0.0.1/cauguste";
-
 exports.findAll = function(req, res) {
 	// Return all companies
 	var returnObj = {
@@ -10,7 +7,7 @@ exports.findAll = function(req, res) {
 		url: req.path,
 		count: 0
 	};
-	pg.connect(conString, function(err, client) {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var query = client.query('SELECT * FROM companies');
@@ -30,7 +27,7 @@ exports.findAll = function(req, res) {
 exports.findByCIK = function(req, res) {
 	// Return data for company specified by CIK
 	var company = {};
-	pg.connect(conString, function(err, client) {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var query = client.query('SELECT * FROM companies WHERE CIK=$1', [req.params.cik]);
@@ -54,7 +51,7 @@ exports.addCompany = function(req, res) {
 	if (!newCompany.cik || !newCompany.name) {
 		res.send(400, {message:"Company objects must include values for 'cik' and 'name'"});
 	} else {
-		pg.connect(conString, function(err, client) {
+		pg.connect(process.env.DATABASE_URL, function(err, client) {
 			if (err) throw err;
 			console.log("Connected to DB...");
 			// TO-DO: Insert data for other fields if they are present
@@ -74,7 +71,7 @@ exports.addCompany = function(req, res) {
 exports.updateCompany = function(req, res) {
 	// Update fields for company specified by CIK
 	var companyInfo = req.body;
-	pg.connect(conString, function(err, client) {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var query = client.query('UPDATE companies SET incorp_st = $1, fy_end = $2 WHERE CIK=$3', [companyInfo.incorp_st, companyInfo.fy_end, req.params.cik]);
@@ -91,7 +88,7 @@ exports.updateCompany = function(req, res) {
 
 exports.deleteCompany = function(req, res) {
 	// Deletes company specified by CIK
-	pg.connect(conString, function(err, client) {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var query = client.query('DELETE FROM companies WHERE CIK = $1',[req.params.cik]);

@@ -1,8 +1,5 @@
 var pg = require('pg');
 
-
-var conString = "pg://tony:@127.0.0.1/cauguste";
-
 exports.findAll = function(req, res) {
 	// Return all filings
 	var returnObj = {
@@ -11,7 +8,7 @@ exports.findAll = function(req, res) {
 		count: 0
 	};
 	var filingArray = [];
-	pg.connect(conString, function(err, client) {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var nextFiling = true;
@@ -62,7 +59,7 @@ exports.findAll = function(req, res) {
 exports.findByAccNum = function(req, res) {
 	// Return data for filing specified by acc_num
 	var filing = {};
-	pg.connect(conString, function(err, client) {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
 		if (err) throw err;
 		console.log("Connected to DB...");
 		var nextFiling = true;

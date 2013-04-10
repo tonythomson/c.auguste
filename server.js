@@ -8,6 +8,7 @@ var app = express();
 app.configure(function () {
 	app.use(express.logger('dev'));
 	app.use(express.bodyParser());
+  // app.set('db uri', process.env.DATABASE_URL);
 });
 
 // Static web pages
@@ -24,5 +25,8 @@ app.delete('/v0/companies/:cik', companies.deleteCompany);
 app.get('/v0/filings', filings.findAll);
 app.get('/v0/filings/:acc_num', filings.findByAccNum);
 
-app.listen(3000);
-console.log('Listening on port 3000...');
+console.log("Environment: " + process.env.NODE_ENV);
+var port = process.env.PORT || 3000;
+app.listen(port, function() {
+  console.log("Listening on " + port);
+});
