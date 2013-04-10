@@ -15,6 +15,9 @@ C.Auguste uses HTTP verbs for all CRUD operations on the database, and strives f
 
     http://api.cauguste.com/
 
+
+__(D'oh. Except that it's not deployed right now; run locally to test).__
+
 ###Company Data Resource URLs:
 
 Method | URL | Action
