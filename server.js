@@ -8,7 +8,6 @@ var app = express();
 app.configure(function () {
 	app.use(express.logger('dev'));
 	app.use(express.bodyParser());
-  // app.set('db uri', process.env.DATABASE_URL);
 });
 
 // Static web pages

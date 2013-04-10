@@ -13,10 +13,8 @@ C.Auguste uses HTTP verbs for all CRUD operations on the database, and strives f
 
 ###Base URL:
 
-    http://api.cauguste.com/
+    http://cauguste.herokuapp.com/
 
-
-__(D'oh. Except that it's not deployed right now; run locally to test).__
 
 ###Company Data Resource URLs:
 
